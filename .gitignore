@@ -1,0 +1,3 @@
+# volumes/ holds the database + storage data; secrets live outside the repo.
+supabase/volumes/
+.env

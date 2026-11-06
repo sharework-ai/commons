@@ -1,0 +1,97 @@
+# Trimmed values for supabase-project (chart 0.8.3) on the local k3s (macus).
+#
+# Goals: fit a dev machine (target < 2.5 GiB for the whole stack) and serve the
+# docwright pack market (Auth + Storage + Postgres + Studio; no realtime,
+# analytics, edge functions). Access is LAN-only HTTP via the chart's own
+# Ingress (host supabase.lan -> traefik web entrypoint on 192.168.2.1:80).
+#
+# Disabled (memory hogs, unused by the market):
+#   analytics (logflare), vector (log daemonset), realtime, edgeRuntime.
+# Kept: rest, meta, auth, envoy, storage, studio, supavisor.
+#
+# Mail: no SMTP on this box, so signup auto-confirms (GOTRUE_MAILER_AUTOCONFIRM).
+# Phone auth is off. Add GOTRUE_SMTP_* entries + a credentials Secret when a
+# real mail relay is wanted.
+
+fullnameOverride: supabase
+
+project:
+  publicUrl: "http://supabase.lan"
+
+ingress:
+  enable: true
+  className: traefik
+  host: supabase.lan
+  annotations: {}
+  tls: []
+
+singleDatabase:
+  storage:
+    accessModes: [ReadWriteOnce]
+    resources:
+      requests:
+        storage: 8Gi
+
+rest:
+  enable: true
+
+meta:
+  enable: true
+
+realtime:
+  enable: false
+
+auth:
+  enable: true
+  config:
+    - name: GOTRUE_SITE_URL
+      value: "http://supabase.lan"
+    - name: GOTRUE_URI_ALLOW_LIST
+      value: ""
+    - name: GOTRUE_DISABLE_SIGNUP
+      value: "false"
+    - name: GOTRUE_EXTERNAL_EMAIL_ENABLED
+      value: "true"
+    - name: GOTRUE_EXTERNAL_ANONYMOUS_USERS_ENABLED
+      value: "false"
+    # No SMTP on this host: confirm signups in place instead of emailing a link.
+    - name: GOTRUE_MAILER_AUTOCONFIRM
+      value: "true"
+    - name: GOTRUE_EXTERNAL_PHONE_ENABLED
+      value: "false"
+    - name: GOTRUE_SMS_AUTOCONFIRM
+      value: "false"
+
+edgeRuntime:
+  enable: false
+
+envoy:
+  enable: true
+
+storage:
+  enable: true
+  config:
+    - name: FILE_SIZE_LIMIT
+      value: "52428800"
+  storage:
+    accessModes: [ReadWriteOnce]
+    resources:
+      requests:
+        storage: 2Gi
+
+studio:
+  enable: true
+  config:
+    - name: DEFAULT_ORGANIZATION_NAME
+      value: "sharework commons"
+    - name: DEFAULT_PROJECT_NAME
+      value: "supabase-lan"
+
+supavisor:
+  enable: true
+
+analytics:
+  enable: false
+
+vector:
+  enable: false
