@@ -1,0 +1,31 @@
+# Public entry for Supabase Auth/Storage: sb.shrwk.com -> envoy gateway.
+# traefik terminates TLS with the shrwk-tls wildcard cert (secret must exist
+# in the supabase namespace — deploy with the snippet below). Clients:
+#   - browsers on dm.shrwk.com pages (supabase-js auth calls)
+#   - the market server keeps using the cluster-internal svc instead
+#
+# Deploy (idempotent):
+#   kubectl -n supabase create secret generic shrwk-tls \
+#     --from-file=tls.crt=$HOME/apps/certs/shrwk-tls/tls.crt \
+#     --from-file=tls.key=$HOME/apps/certs/shrwk-tls/tls.key \
+#     --dry-run=client -o yaml | kubectl apply -f -
+#   kubectl apply -f ingress-sb.yaml
+# LAN hosts entry (for local browser testing):
+#   192.168.2.1 sb.shrwk.com
+# Public DNS: sb.shrwk.com A -> 119.91.111.213 (frps SNI -> frpc dm/sb-web -> traefik)
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: supabase-sb
+  namespace: supabase
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`sb.shrwk.com`)
+      kind: Rule
+      services:
+        - name: supabase-envoy
+          port: 8000
+  tls:
+    secretName: shrwk-tls

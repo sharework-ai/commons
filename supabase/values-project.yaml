@@ -45,7 +45,7 @@ auth:
   enable: true
   config:
     - name: GOTRUE_SITE_URL
-      value: "http://supabase.lan"
+      value: "https://sb.shrwk.com"
     - name: GOTRUE_URI_ALLOW_LIST
       value: ""
     - name: GOTRUE_DISABLE_SIGNUP
